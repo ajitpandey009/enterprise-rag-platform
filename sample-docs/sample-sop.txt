@@ -1,0 +1,87 @@
+Standard Operating Procedure: Incident Response
+=================================================
+
+Document ID: SOP-INC-001
+Version: 2.3
+Last Updated: 2024-12-01
+Owner: Platform Engineering Team
+
+1. PURPOSE
+This SOP defines the procedures for handling production incidents
+across all enterprise systems, ensuring consistent response and
+minimal business impact.
+
+2. SCOPE
+Applies to all P1-P4 incidents across:
+- Core banking platform
+- Customer-facing applications
+- Internal tooling and dashboards
+- Data pipeline systems
+
+3. SEVERITY LEVELS
+
+P1 - Critical:
+- Complete service outage
+- Data loss or corruption
+- Security breach
+- Response time: 15 minutes
+- Resolution target: 1 hour
+
+P2 - High:
+- Major feature degradation
+- Performance issues affecting >50% users
+- Response time: 30 minutes
+- Resolution target: 4 hours
+
+P3 - Medium:
+- Minor feature issues
+- Workaround available
+- Response time: 2 hours
+- Resolution target: 24 hours
+
+P4 - Low:
+- Cosmetic issues
+- Documentation errors
+- Response time: 24 hours
+- Resolution target: 5 business days
+
+4. INCIDENT RESPONSE PROCEDURE
+
+Step 1: Detection and Triage
+- Monitor alerts from PagerDuty/Grafana
+- Acknowledge the incident within the response time
+- Assess severity level based on criteria above
+- Assign an Incident Commander (IC)
+
+Step 2: Communication
+- Create incident channel in Slack (#inc-YYYYMMDD-description)
+- Notify stakeholders based on severity level
+- Post initial status update within 15 minutes
+
+Step 3: Investigation
+- Gather logs from ELK Stack
+- Check metrics in Grafana dashboards
+- Review recent deployments in ArgoCD
+- Analyze error patterns in Sentry
+
+Step 4: Resolution
+- Implement fix or rollback
+- Verify fix in staging environment
+- Deploy to production
+- Monitor for 30 minutes post-deployment
+
+Step 5: Post-Incident
+- Schedule post-mortem within 48 hours
+- Document root cause analysis
+- Create action items for prevention
+- Update runbooks as needed
+
+5. ESCALATION MATRIX
+- Engineering Lead: After 30 minutes without progress
+- VP Engineering: P1 incidents lasting > 1 hour
+- CTO: P1 incidents lasting > 2 hours
+- CEO: P1 incidents with customer data impact
+
+6. RUNBOOK LOCATION
+All operational runbooks are stored in Confluence:
+/wiki/spaces/PLATFORM/pages/runbooks

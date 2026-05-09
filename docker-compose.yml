@@ -1,0 +1,111 @@
+# ============================================================
+# Enterprise RAG Platform — Docker Compose
+# Services: PostgreSQL + pgvector, Ollama, Backend, Frontend
+# ============================================================
+
+services:
+  # --- PostgreSQL with pgvector extension ---
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: rag-postgres
+    environment:
+      POSTGRES_DB: ragplatform
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ragpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raguser -d ragplatform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rag-network
+
+  # --- Ollama LLM Server ---
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rag-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - rag-network
+
+  # --- Pull models after Ollama starts ---
+  ollama-init:
+    image: curlimages/curl:latest
+    container_name: rag-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        echo 'Pulling llama3 model...' &&
+        curl -s http://ollama:11434/api/pull -d '{\"name\": \"llama3\"}' &&
+        echo 'Pulling nomic-embed-text model...' &&
+        curl -s http://ollama:11434/api/pull -d '{\"name\": \"nomic-embed-text\"}' &&
+        echo 'Models pulled successfully!'
+      "
+    networks:
+      - rag-network
+
+  # --- Spring Boot Backend ---
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rag-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:postgresql://postgres:5432/ragplatform
+      DB_USERNAME: raguser
+      DB_PASSWORD: ragpassword
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ragplatform
+      OLLAMA_BASE_URL: http://ollama:11434
+      JWT_SECRET: c2VjdXJlLWVudGVycHJpc2UtcmFnLXBsYXRmb3JtLWp3dC1zZWNyZXQta2V5LXRoYXQtaXMtbG9uZy1lbm91Z2g=
+      CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - rag-network
+
+  # --- React Frontend ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rag-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - rag-network
+
+volumes:
+  pgdata:
+  ollama-data:
+
+networks:
+  rag-network:
+    driver: bridge
