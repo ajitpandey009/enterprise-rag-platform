@@ -55,7 +55,6 @@ public class LangChain4jConfig {
                 .table(pgTable)
                 .dimension(pgDimension)
                 .createTable(true)
-                .useIndex(true)
                 .build();
     }
 }
