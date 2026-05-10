@@ -21,6 +21,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -82,8 +83,18 @@ public class DocumentController {
 
         document = documentRepository.save(document);
 
-        // Kick off async processing
-        ingestionService.processDocument(document.getId(), file);
+        // Read file bytes synchronously before async handoff
+        // (MultipartFile temp files are deleted after the HTTP request completes)
+        byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException e) {
+            log.error("Failed to read uploaded file: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+
+        // Kick off async processing with the byte array
+        ingestionService.processDocument(document.getId(), fileBytes, file.getOriginalFilename());
 
         auditService.logAction("DOCUMENT_UPLOADED", "DOCUMENT", document.getId(),
                 Map.of("filename", file.getOriginalFilename(), "size", file.getSize()));

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -80,7 +81,7 @@ public class DocumentIngestionService {
      * the upload API has already returned a response to the client.
      */
     @Async
-    public void processDocument(UUID documentId, MultipartFile file) {
+    public void processDocument(UUID documentId, byte[] fileBytes, String filename) {
         log.info("Starting async processing for document: {}", documentId);
 
         Document document = documentRepository.findById(documentId)
@@ -96,7 +97,7 @@ public class DocumentIngestionService {
             DocumentParser parser = new ApacheTikaDocumentParser();
             dev.langchain4j.data.document.Document parsedDoc;
 
-            try (InputStream is = file.getInputStream()) {
+            try (InputStream is = new ByteArrayInputStream(fileBytes)) {
                 parsedDoc = parser.parse(is);
             }
 
