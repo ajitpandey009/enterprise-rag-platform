@@ -98,8 +98,8 @@ app:
     # Embedding dimensions (768 for nomic-embed-text, 1536 for OpenAI)
     embedding-dimension: ${EMBEDDING_DIMENSION:768}
     # Retrieval settings
-    max-results: ${RAG_MAX_RESULTS:5}
-    min-score: ${RAG_MIN_SCORE:0.5}
+    max-results: ${RAG_MAX_RESULTS:10}
+    min-score: ${RAG_MIN_SCORE:0.3}
     # Prompt template
     system-prompt: |
       You are an enterprise knowledge assistant for internal documentation.
