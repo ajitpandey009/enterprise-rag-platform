@@ -2,6 +2,8 @@ package com.enterprise.rag.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -40,6 +42,7 @@ public class AuditLog {
 
     /** Structured details about the action (stored as JSONB) */
     @Column(columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String details;
 
     @Column(name = "ip_address", length = 50)

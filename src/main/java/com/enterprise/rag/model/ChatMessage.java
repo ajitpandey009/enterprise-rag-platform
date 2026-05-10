@@ -2,6 +2,8 @@ package com.enterprise.rag.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -46,6 +48,7 @@ public class ChatMessage {
 
     /** JSON array of chunk IDs used as RAG context */
     @Column(name = "source_chunks", columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String sourceChunks;
 
     @Column(name = "model_name", length = 100)
