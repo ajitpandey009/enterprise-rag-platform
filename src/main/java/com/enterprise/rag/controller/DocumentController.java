@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -37,15 +38,18 @@ public class DocumentController {
     private final DocumentChunkRepository chunkRepository;
     private final DocumentIngestionService ingestionService;
     private final AuditService auditService;
+    private final JdbcTemplate jdbcTemplate;
 
     public DocumentController(DocumentRepository documentRepository,
                                DocumentChunkRepository chunkRepository,
                                DocumentIngestionService ingestionService,
-                               AuditService auditService) {
+                               AuditService auditService,
+                               JdbcTemplate jdbcTemplate) {
         this.documentRepository = documentRepository;
         this.chunkRepository = chunkRepository;
         this.ingestionService = ingestionService;
         this.auditService = auditService;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -132,7 +136,14 @@ public class DocumentController {
         Document doc = documentRepository.findByIdAndTenantId(id, principal.getTenantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found: " + id));
 
+        // 1. Delete chunk metadata
         chunkRepository.deleteByDocumentId(doc.getId());
+        
+        // 2. Delete vector embeddings from pgvector (LangChain4j stores these separately)
+        String deleteEmbeddingsSql = "DELETE FROM document_embeddings WHERE metadata->>'documentId' = ?";
+        jdbcTemplate.update(deleteEmbeddingsSql, doc.getId().toString());
+
+        // 3. Delete document record
         documentRepository.delete(doc);
 
         auditService.logAction("DOCUMENT_DELETED", "DOCUMENT", id,
