@@ -150,6 +150,9 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+  metrics:
+    tags:
+      application: enterprise-rag-platform
 
 # ============================================================
 # Logging

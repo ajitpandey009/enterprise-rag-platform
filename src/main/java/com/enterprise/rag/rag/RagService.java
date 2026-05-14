@@ -33,6 +33,9 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
 import java.time.Instant;
 import java.util.*;
 
@@ -59,6 +62,7 @@ public class RagService {
     private final AuditService auditService;
     private final TokenUsageTracker tokenUsageTracker;
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
 
     @Value("${app.rag.max-results}")
     private int maxResults;
@@ -76,7 +80,8 @@ public class RagService {
                       ChatMessageRepository messageRepository,
                       AuditService auditService,
                       TokenUsageTracker tokenUsageTracker,
-                      ObjectMapper objectMapper) {
+                      ObjectMapper objectMapper,
+                      MeterRegistry meterRegistry) {
         this.chatModel = chatModel;
         this.embeddingModel = embeddingModel;
         this.embeddingStore = embeddingStore;
@@ -85,6 +90,7 @@ public class RagService {
         this.auditService = auditService;
         this.tokenUsageTracker = tokenUsageTracker;
         this.objectMapper = objectMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -112,7 +118,9 @@ public class RagService {
                     .minScore(minScore)
                     .build();
 
+            Timer.Sample retrievalSample = Timer.start(meterRegistry);
             EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(searchRequest);
+            retrievalSample.stop(meterRegistry.timer("rag.retrieval.latency"));
             List<EmbeddingMatch<TextSegment>> matches = searchResult.matches();
 
             log.info("Found {} relevant chunks", matches.size());
@@ -175,7 +183,10 @@ public class RagService {
                     .messages(messages)
                     .build();
 
+            Timer.Sample generationSample = Timer.start(meterRegistry);
             ChatResponse response = chatModel.chat(chatRequest);
+            generationSample.stop(meterRegistry.timer("rag.generation.latency"));
+            
             String answer = response.aiMessage().text();
 
             long latencyMs = System.currentTimeMillis() - startTime;
