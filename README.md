@@ -4,22 +4,67 @@ A **production-grade Retrieval-Augmented Generation (RAG)** platform for enterpr
 
 ---
 
+## 🖼️ Application UI
+
+![Chat UI Screenshot](docs/images/chat-ui.png)
+
+---
+
 ## 🏗️ Architecture
 
-```
-┌──────────────┐     ┌──────────────────────────────────────┐     ┌─────────────┐
-│ React Frontend│────▶│  Spring Boot Backend (:8080)          │────▶│ Ollama/OpenAI│
-│   (:3000)    │◀────│  ┌──────────┐ ┌───────┐ ┌─────────┐ │◀────│  LLM Server  │
-│              │     │  │ Security │ │  RAG  │ │Ingestion│ │     └─────────────┘
-│  • Chat UI   │     │  │ JWT/RBAC │ │Pipeline│ │Pipeline │ │
-│  • Upload UI │     │  └──────────┘ └───────┘ └─────────┘ │
-│  • History   │     │         ↕                    ↕       │
-└──────────────┘     │  ┌─────────────────────────────────┐ │
-                     │  │  PostgreSQL + pgvector            │ │
-                     │  │  • Documents • Chunks • Embeddings│ │
-                     │  │  • Chat History • Audit Logs      │ │
-                     │  └─────────────────────────────────┘ │
-                     └──────────────────────────────────────┘
+```mermaid
+graph TD
+    %% Styling
+    classDef frontend fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#fff;
+    classDef backend fill:#166534,stroke:#22c55e,stroke-width:2px,color:#fff;
+    classDef ai fill:#7e22ce,stroke:#a855f7,stroke-width:2px,color:#fff;
+    classDef db fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef user fill:#9f1239,stroke:#fb7185,stroke-width:2px,color:#fff;
+
+    User(("👨‍💻 User")):::user
+    
+    subgraph "Frontend Layer"
+        UI["⚛️ React + Vite\n(Glassmorphism UI)"]:::frontend
+    end
+
+    subgraph "Backend Layer (Java 21 + Spring Boot 3.3)"
+        Auth["🔐 Security\n(JWT, Multi-Tenancy)"]:::backend
+        API["📡 REST Controllers"]:::backend
+        Ingest["📄 Document Ingestion\n(Apache Tika)"]:::backend
+        RAG["🧠 RAG Service\n(LangChain4j)"]:::backend
+    end
+
+    subgraph "Data Layer"
+        Postgres[("🐘 PostgreSQL\n(Relational Data)")]:::db
+        PgVector[("📐 pgvector\n(Vector Embeddings)")]:::db
+    end
+
+    subgraph "AI / LLM Layer"
+        Ollama["🦙 Ollama (Local)"]:::ai
+        EmbedModel["🔢 Nomic-Embed-Text\n(Embedding Model)"]:::ai
+        Llama3["💬 Llama 3\n(Chat Generation)"]:::ai
+    end
+
+    %% Connections
+    User -->|Interacts| UI
+    UI <-->|JSON / SSE Streams| API
+    API --> Auth
+    Auth --> Ingest
+    Auth --> RAG
+    
+    Ingest -->|Parse & Chunk| EmbedModel
+    EmbedModel -->|Return Vector| Ingest
+    Ingest -->|Store Vectors| PgVector
+    Ingest -->|Store Metadata| Postgres
+    
+    RAG -->|1. Query| EmbedModel
+    EmbedModel -->|2. Vector Query| RAG
+    RAG -->|3. Similarity Search| PgVector
+    PgVector -->|4. Top K Chunks| RAG
+    RAG -->|5. Context + Prompt| Llama3
+    Llama3 -->|6. AI Response| RAG
+    
+    RAG <-->|Chat History| Postgres
 ```
 
 ## ✨ Features
