@@ -1,5 +1,12 @@
 # 🧠 Enterprise RAG Platform
 
+[![CI Pipeline](https://github.com/ajitpandey009/enterprise-rag-platform/actions/workflows/build.yml/badge.svg)](https://github.com/ajitpandey009/enterprise-rag-platform/actions/workflows/build.yml)
+![Java Support](https://img.shields.io/badge/Java-21%2B-blue?logo=java)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3-brightgreen?logo=springboot)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-blue?logo=postgresql)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 A **production-grade Retrieval-Augmented Generation (RAG)** platform for enterprise knowledge management. Upload internal documents (PDFs, TXT), ask natural language questions, and get AI-powered answers grounded exclusively in your organization's knowledge base.
 
 ---
