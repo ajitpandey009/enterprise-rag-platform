@@ -87,9 +87,9 @@ graph TD
 - **JWT Authentication** — Stateless token-based auth with refresh tokens
 - **Role-Based Access Control** — USER, ADMIN, SUPER_ADMIN roles
 - **Multi-Tenant Isolation** — Tenant-scoped data via ThreadLocal context
+- **Observability Stack** — Prometheus & Grafana with Micrometer metrics tracking token usage and AI latencies
 - **Audit Logging** — Immutable audit trail for all actions
 - **Request Tracing** — Correlation IDs for end-to-end AI request tracing
-- **Token Usage Tracking** — LLM cost monitoring per request
 - **Spring Retry** — Exponential backoff for LLM API resilience
 - **Swagger/OpenAPI** — Interactive API documentation
 
@@ -102,6 +102,7 @@ graph TD
 | Database | PostgreSQL 16 + pgvector |
 | Frontend | React 18, Vite, React Router |
 | Auth | JWT (jjwt), BCrypt, Spring Security |
+| Observability | Micrometer, Prometheus, Grafana |
 | Docs | Swagger UI (springdoc-openapi) |
 | Infra | Docker, Docker Compose |
 
@@ -131,6 +132,8 @@ docker logs -f rag-ollama-init
 | Backend API | http://localhost:8080 |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 | Ollama | http://localhost:11434 |
+| Grafana | http://localhost:3001 (admin/admin) |
+| Prometheus | http://localhost:9090 |
 
 ### 3. First Steps
 1. Open http://localhost:3000
